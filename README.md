@@ -63,7 +63,7 @@ models:
           - not_null
       - name: status
         tests:
-          - name: must be in accepted values
+          - name: status must be in accepted values
             sql: |
               SELECT * FROM posts WHERE status NOT IN ('Draft', 'Private', 'Published')
 ```
@@ -82,7 +82,7 @@ and the output as below:
 posts
 - title should be unique [OK]
 - author should not be null [OK]
-- must be in accepted values  [OK]
+- status must be in accepted values  [OK]
 ```
 
 #### With the output format json
@@ -133,10 +133,10 @@ and the output as below:
           "tests": [
             {
               "spec": {
-                "name": "must be in accepted values",
+                "name": "status must be in accepted values",
                 "sql": "SELECT * FROM posts WHERE status NOT IN ('Draft', 'Private', 'Published')\n"
               },
-              "title": "must be in accepted values ",
+              "title": "status must be in accepted values ",
               "sql": "SELECT COUNT(*) FROM (SELECT * FROM posts WHERE status NOT IN ('Draft', 'Private', 'Published')\n) a",
               "is_ok": true,
               "info": {
