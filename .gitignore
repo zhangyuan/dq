@@ -24,3 +24,4 @@ go.work
 /tmp
 /dq
 /.vscode
+/bin/

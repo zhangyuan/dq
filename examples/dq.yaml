@@ -1,0 +1,15 @@
+models:
+  - table: posts
+    filter: _deleted = false
+    columns:
+      - name: title
+        tests:
+          - unique
+      - name: author
+        tests:
+          - not_null
+      - name: status
+        tests:
+          - name: must be in accepted values
+            sql: |
+              SELECT * FROM posts WHERE status NOT IN ('Draft', 'Private', 'Published')
