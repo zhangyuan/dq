@@ -19,9 +19,9 @@ type Executor struct {
 }
 
 func NewDB() (*sqlx.DB, error) {
-	dbURL := os.Getenv("DB_URL")
-	dbDriverName := strings.Split(dbURL, ":")[0]
-	db, err := db.NewConnection(dbDriverName, dbURL)
+	dsn := os.Getenv("DSN")
+	dbDriverName := strings.Split(dsn, ":")[0]
+	db, err := db.NewConnection(dbDriverName, dsn)
 	if err != nil {
 		return nil, err
 	}
@@ -215,7 +215,9 @@ func Execute(rulesPath string, format string) (bool, error) {
 	} else {
 		logger, _ = zap.NewProduction()
 	}
-	defer logger.Sync()
+	defer func() {
+		_ = logger.Sync()
+	}()
 
 	shouldDisplayData := strings.ToLower(os.Getenv("DISPLAY_DATA")) == "true"
 
