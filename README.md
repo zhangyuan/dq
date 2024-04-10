@@ -2,7 +2,7 @@
 
 A data quality utility.
 
-> This project is a personal business project that is updated intermittently.
+> This project is a personal project that is updated intermittently.
 
 ## Installation
 
