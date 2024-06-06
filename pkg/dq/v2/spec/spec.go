@@ -6,19 +6,42 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-type Model struct {
-	Table   string   `yaml:"table"`
-	Columns []Column `yaml:"columns"`
-	Filter  string   `yaml:"filter"`
+type InsertMode struct {
+	Overwrite bool
+	Partition string
 }
 
-type Column struct {
-	Name  string `yaml:"name"`
-	Tests []interface{}
+type ResultTable struct {
+	Name          string
+	Type          string
+	PartitionedBy string
+	InsertMode    InsertMode
+}
+
+type Expect struct {
+	GT  int
+	GTE int
+	LT  int
+	LTE int
+	EQ  int
+}
+
+type Rule struct {
+	Name      string
+	Validator string
+	Columns   []string
+	Expect    Expect
+}
+
+type Model struct {
+	Table  string
+	Filter string
+	Rules  []Rule
 }
 
 type Spec struct {
-	Tables []Model `yaml:"models"`
+	Version string
+	Models  []Model
 }
 
 func Parse[T any](data []byte, validator func(*T) error) (*T, error) {
@@ -40,8 +63,4 @@ func ParseFromFile[T any](path string, validator func(*T) error) (*T, error) {
 		return nil, err
 	}
 	return Parse[T](bytes, validator)
-}
-
-func LoadRulesFomPath(path string) (*Spec, error) {
-	return ParseFromFile(path, func(t *Spec) error { return nil })
 }
