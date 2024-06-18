@@ -54,5 +54,6 @@ func (e *Executor) Execute(rulesPath string, format string) (bool, error) {
 	}
 
 	fmt.Println(resultRows)
+
 	return true, nil
 }

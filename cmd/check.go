@@ -21,16 +21,7 @@ var checkCmd = &cobra.Command{
 
 		dsn := os.Getenv("DSN")
 
-		var passed bool
-		var err error
-		if strings.Contains(dsn, "maxcompute") {
-			executor := v2.Executor{}
-			passed, err = executor.Execute(specPath, format)
-			return
-		} else {
-			passed, err = executor.Execute(specPath, format)
-		}
-
+		passed, err := execute(dsn, specPath, format)
 		if err != nil {
 			log.Fatalln(err)
 		}
@@ -39,6 +30,15 @@ var checkCmd = &cobra.Command{
 			os.Exit(1)
 		}
 	},
+}
+
+func execute(dsn string, specPath string, format string) (bool, error) {
+	if strings.Contains(dsn, "maxcompute") {
+		executor := v2.Executor{}
+		return executor.Execute(specPath, format)
+	} else {
+		return executor.Execute(specPath, format)
+	}
 }
 
 var specPath string
