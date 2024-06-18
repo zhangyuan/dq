@@ -2,8 +2,10 @@ package cmd
 
 import (
 	"dq/pkg/dq/executor"
+	v2 "dq/pkg/dq/v2"
 	"log"
 	"os"
+	"strings"
 
 	"github.com/joho/godotenv"
 	"github.com/spf13/cobra"
@@ -17,7 +19,18 @@ var checkCmd = &cobra.Command{
 			log.Fatal("Error loading .env file")
 		}
 
-		passed, err := executor.Execute(specPath, format)
+		dsn := os.Getenv("DSN")
+
+		var passed bool
+		var err error
+		if strings.Contains(dsn, "maxcompute") {
+			executor := v2.Executor{}
+			passed, err = executor.Execute(specPath, format)
+			return
+		} else {
+			passed, err = executor.Execute(specPath, format)
+		}
+
 		if err != nil {
 			log.Fatalln(err)
 		}

@@ -19,11 +19,11 @@ type ResultTable struct {
 }
 
 type Expect struct {
-	GT  int
-	GTE int
-	LT  int
-	LTE int
-	EQ  int
+	GT  *int
+	GTE *int
+	LT  *int
+	LTE *int
+	EQ  *int
 }
 
 type Rule struct {
@@ -34,9 +34,9 @@ type Rule struct {
 }
 
 type Model struct {
-	Table  string
-	Filter string
-	Rules  []Rule
+	Table         string
+	DefaultFilter string
+	Rules         []Rule
 }
 
 type Spec struct {
@@ -44,13 +44,13 @@ type Spec struct {
 	Models  []Model
 }
 
-func Parse[T any](data []byte, validator func(*T) error) (*T, error) {
+func Parse[T any](data []byte, specValidator func(*T) error) (*T, error) {
 	var t T
 	if err := yaml.Unmarshal(data, &t); err != nil {
 		return nil, err
 	}
 
-	if err := validator(&t); err != nil {
+	if err := specValidator(&t); err != nil {
 		return nil, err
 	}
 

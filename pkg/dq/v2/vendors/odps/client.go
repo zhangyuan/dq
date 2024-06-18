@@ -1,17 +1,16 @@
 package odps
 
 import (
-	"database/sql"
-
 	_ "github.com/aliyun/aliyun-odps-go-sdk/sqldriver"
+	"github.com/jmoiron/sqlx"
 )
 
 type Client struct {
-	DB *sql.DB
+	DB *sqlx.DB
 }
 
 func NewClient(dsn string) (*Client, error) {
-	db, err := sql.Open("odps", dsn)
+	db, err := sqlx.Open("odps", dsn)
 	if err != nil {
 		return nil, err
 	}

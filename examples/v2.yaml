@@ -1,0 +1,13 @@
+version: "2"
+models:
+  - table: orders
+    default_filter: _deleted = false
+    rules:
+      - name: table must not be empty
+        validator: rows_count
+        expect:
+          gt: 0
+      - name: order_no must be unique
+        validator: uniqueness
+        columns:
+          - order_no
