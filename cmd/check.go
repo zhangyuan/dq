@@ -34,7 +34,7 @@ var checkCmd = &cobra.Command{
 
 func execute(dsn string, specPath string, format string) (bool, error) {
 	if strings.Contains(dsn, "maxcompute") {
-		executor := v2.Executor{}
+		executor := v2.NewExecutor(dsn)
 		return executor.Execute(specPath, format)
 	} else {
 		return executor.Execute(specPath, format)

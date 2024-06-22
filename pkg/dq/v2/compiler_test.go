@@ -1,7 +1,8 @@
-package odps
+package v2
 
 import (
 	"dq/pkg/dq/v2/spec"
+	"dq/pkg/dq/v2/vendors/odps"
 	"strings"
 	"testing"
 
@@ -9,7 +10,8 @@ import (
 )
 
 func TestCompileRowCountRule(t *testing.T) {
-	compiler := Compiler{}
+	templates := odps.OdpsTemplates{}
+	compiler := NewCompiler(templates)
 	model := spec.Model{Table: "orders", Filter: "deleted = false"}
 	gtValue := 0
 	rule := spec.Rule{
@@ -37,7 +39,8 @@ FROM result`)
 }
 
 func TestCompileRowCountRuleWithExtraFilter(t *testing.T) {
-	compiler := Compiler{}
+	templates := odps.OdpsTemplates{}
+	compiler := NewCompiler(templates)
 	model := spec.Model{Table: "orders", Filter: "deleted = false"}
 	gtValue := 0
 	rule := spec.Rule{
@@ -66,7 +69,8 @@ FROM result`)
 }
 
 func TestCompileRowCountRuleWithFilterOverwritten(t *testing.T) {
-	compiler := Compiler{}
+	templates := odps.OdpsTemplates{}
+	compiler := NewCompiler(templates)
 	model := spec.Model{Table: "orders", Filter: "deleted = false"}
 	gtValue := 0
 	rule := spec.Rule{
@@ -95,7 +99,9 @@ FROM result`)
 }
 
 func TestCompileDuplicatesRule(t *testing.T) {
-	compiler := Compiler{}
+	templates := odps.OdpsTemplates{}
+	compiler := NewCompiler(templates)
+
 	model := spec.Model{Table: "orders", Filter: "deleted = false"}
 	expectValue := 0
 	rule := spec.Rule{
@@ -128,7 +134,9 @@ FROM result`)
 }
 
 func TestCompileDuplicatesRuleGivenMultileColumns(t *testing.T) {
-	compiler := Compiler{}
+	templates := odps.OdpsTemplates{}
+	compiler := NewCompiler(templates)
+
 	model := spec.Model{Table: "work_orders", Filter: "deleted = false"}
 	expectValue := 0
 	rule := spec.Rule{
@@ -161,7 +169,9 @@ FROM result`)
 }
 
 func TestCompileSqlRule(t *testing.T) {
-	compiler := Compiler{}
+	templates := odps.OdpsTemplates{}
+	compiler := NewCompiler(templates)
+
 	model := spec.Model{Table: "work_orders", Filter: "deleted = false"}
 	expectValue := 0
 	rule := spec.Rule{
