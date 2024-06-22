@@ -21,27 +21,27 @@ type Spec struct {
 	Tables []Model `yaml:"models"`
 }
 
-func LoadRules(data []byte) (*Spec, error) {
-	rulesConfig := Spec{}
-	if err := yaml.Unmarshal(data, &rulesConfig); err != nil {
+func Parse[T any](data []byte, validator func(*T) error) (*T, error) {
+	var t T
+	if err := yaml.Unmarshal(data, &t); err != nil {
 		return nil, err
 	}
 
-	if err := Validate(&rulesConfig); err != nil {
+	if err := validator(&t); err != nil {
 		return nil, err
 	}
 
-	return &rulesConfig, nil
+	return &t, nil
 }
 
-func LoadRulesFomPath(path string) (*Spec, error) {
+func ParseFromFile[T any](path string, validator func(*T) error) (*T, error) {
 	bytes, err := os.ReadFile(path)
 	if err != nil {
 		return nil, err
 	}
-	return LoadRules(bytes)
+	return Parse[T](bytes, validator)
 }
 
-func Validate(rulesConfig *Spec) error {
-	return nil
+func LoadRulesFomPath(path string) (*Spec, error) {
+	return ParseFromFile(path, func(t *Spec) error { return nil })
 }
