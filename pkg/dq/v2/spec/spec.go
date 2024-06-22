@@ -32,6 +32,7 @@ type Rule struct {
 	Columns     []string
 	Filter      string
 	ExtraFilter string
+	Query       string
 	Expect      Expect
 }
 

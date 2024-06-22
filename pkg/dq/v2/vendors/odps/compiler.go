@@ -3,20 +3,18 @@ package odps
 import (
 	"bytes"
 	"dq/pkg/dq/v2/spec"
+	"dq/pkg/dq/v2/vendors/odps/templates"
 	"fmt"
 	"strings"
 	"text/template"
+
+	"github.com/Masterminds/sprig/v3"
 )
 
-const RowsCountTemplateContent = `WITH result AS (
-	SELECT COUNT(*) as value FROM {{ .TableName }}{{ if .Filter }} WHERE {{ .Filter }}{{end}}
-)
-SELECT 	GETDATE() AS proc_time,
-		IF({{.Conditions }}, 0, 1) is_failed,
-		IF({{ .Conditions }}, 1, 0) is_ok,
-		"{{ .TableName }}" as table_name,
-		"{{ .Validator }}" as validator
-FROM result`
+const RowsCountValidator = "rows_count"
+const DuplicatesValidator = "duplicates"
+const NotNullValidator = "not_null"
+const SqlValidator = "sql"
 
 type Compiler struct {
 }
@@ -63,27 +61,45 @@ func CompileRule(model *spec.Model, rule *spec.Rule) (string, error) {
 	}
 
 	data := map[string]interface{}{
-		"TableName": model.Table,
-		"Filter":    filter,
-		"Validator": rule.Validator,
+		"TableName":  model.Table,
+		"Filter":     filter,
+		"Validator":  rule.Validator,
+		"Conditions": strings.Join(CompileExpect(&rule.Expect), " AND "),
 	}
 
-	if rule.Validator == "rows_count" {
-		rowsCountTemplate, err := template.New("rowsCountTemplate").Parse(RowsCountTemplateContent)
+	if rule.Validator == RowsCountValidator {
+		sqlTemplate, err := template.New("sql").Parse(templates.RowsCount)
 		if err != nil {
 			return "", nil
 		}
 
-		data["Conditions"] = strings.Join(CompileExpect(&rule.Expect), " AND ")
-
-		var buf bytes.Buffer
-		if err := rowsCountTemplate.Execute(&buf, data); err != nil {
+		return ExecuteTemplate(sqlTemplate, data)
+	} else if rule.Validator == DuplicatesValidator {
+		data["Columns"] = rule.Columns
+		sqlTemplate, err := template.New("sql").Funcs(sprig.FuncMap()).Parse(templates.Duplicates)
+		if err != nil {
 			return "", err
 		}
-		return buf.String(), nil
+
+		return ExecuteTemplate(sqlTemplate, data)
+	} else if rule.Validator == SqlValidator {
+		sqlTemplate, err := template.New("sql").Funcs(sprig.FuncMap()).Parse(templates.CustomSQL)
+		if err != nil {
+			return "", err
+		}
+		data["Query"] = rule.Query
+		return ExecuteTemplate(sqlTemplate, data)
 	} else {
 		return "", fmt.Errorf("invalid validator %s", rule.Validator)
 	}
+}
+
+func ExecuteTemplate(template *template.Template, data map[string]any) (string, error) {
+	var buf bytes.Buffer
+	if err := template.Execute(&buf, data); err != nil {
+		return "", err
+	}
+	return buf.String(), nil
 }
 
 func Compile(spec *spec.Spec) (string, error) {
