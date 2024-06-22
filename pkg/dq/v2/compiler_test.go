@@ -26,7 +26,7 @@ func TestCompileRowCountRule(t *testing.T) {
 WITH result AS (
 	SELECT COUNT(*) AS value FROM orders WHERE deleted = false
 )
-SELECT 	GETDATE() AS proc_time,
+SELECT GETDATE() AS proc_time,
 	IF(value > 0, 0, 1) is_failed,
 	IF(value > 0, 1, 0) is_ok,
 	"orders" AS table_name,
@@ -56,7 +56,7 @@ func TestCompileRowCountRuleWithExtraFilter(t *testing.T) {
 WITH result AS (
 	SELECT COUNT(*) AS value FROM orders WHERE deleted = false AND type IS NOT NULL
 )
-SELECT 	GETDATE() AS proc_time,
+SELECT GETDATE() AS proc_time,
 	IF(value > 0, 0, 1) is_failed,
 	IF(value > 0, 1, 0) is_ok,
 	"orders" AS table_name,
@@ -86,7 +86,7 @@ func TestCompileRowCountRuleWithFilterOverwritten(t *testing.T) {
 WITH result AS (
 	SELECT COUNT(*) AS value FROM orders WHERE 1=1
 )
-SELECT 	GETDATE() AS proc_time,
+SELECT GETDATE() AS proc_time,
 	IF(value > 0, 0, 1) is_failed,
 	IF(value > 0, 1, 0) is_ok,
 	"orders" AS table_name,
@@ -117,11 +117,11 @@ func TestCompileDuplicatesRule(t *testing.T) {
 WITH query AS (
 	SELECT order_no FROM orders WHERE deleted = false
 	GROUP BY order_no
-	HAVINT COUNT(*) > 1
+	HAVING COUNT(*) > 1
 ), result AS (
 	SELECT COUNT(*) AS value FROM query
 ),
-SELECT 	GETDATE() AS proc_time,
+SELECT GETDATE() AS proc_time,
 	IF(value = 0, 0, 1) is_failed,
 	IF(value = 0, 1, 0) is_ok,
 	"orders" AS table_name,
@@ -152,7 +152,7 @@ func TestCompileDuplicatesRuleGivenMultileColumns(t *testing.T) {
 WITH query AS (
 	SELECT order_no, production_date FROM work_orders WHERE deleted = false
 	GROUP BY order_no, production_date
-	HAVINT COUNT(*) > 1
+	HAVING COUNT(*) > 1
 ), result AS (
 	SELECT COUNT(*) AS value FROM query
 ),

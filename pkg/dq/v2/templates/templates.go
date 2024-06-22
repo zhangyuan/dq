@@ -4,4 +4,5 @@ type Templates interface {
 	RowsCount() string
 	Duplicates() string
 	CustomSql() string
+	Union() string
 }

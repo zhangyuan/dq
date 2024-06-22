@@ -4,6 +4,8 @@ import (
 	"bytes"
 	"dq/pkg/dq/v2/spec"
 	"dq/pkg/dq/v2/templates"
+	"dq/pkg/dq/v2/vendors/odps"
+	"errors"
 	"fmt"
 	"strings"
 	"text/template"
@@ -17,7 +19,8 @@ const NotNullValidator = "not_null"
 const SqlValidator = "sql"
 
 type Compiler struct {
-	templates templates.Templates
+	templates       templates.Templates
+	AppendSemicolon bool
 }
 
 func NewCompiler(templates templates.Templates) *Compiler {
@@ -63,24 +66,25 @@ func (c *Compiler) CompileRule(model *spec.Model, rule *spec.Rule) (string, erro
 		"TableName":  model.Table,
 		"Filter":     filter,
 		"Validator":  rule.Validator,
+		"Rule":       rule,
 		"Conditions": strings.Join(CompileExpect(&rule.Expect), " AND "),
 	}
 
 	if rule.Validator == RowsCountValidator {
-		sqlTemplate, err := template.New("sql").Parse(c.templates.RowsCount())
+		sqlTemplate, err := NewTexTemplate("sql").Parse(c.templates.RowsCount())
 		if err != nil {
 			return "", nil
 		}
 		return executeTemplate(sqlTemplate, data)
 	} else if rule.Validator == DuplicatesValidator {
 		data["Columns"] = rule.Columns
-		sqlTemplate, err := template.New("sql").Funcs(sprig.FuncMap()).Parse(c.templates.Duplicates())
+		sqlTemplate, err := NewTexTemplate("sql").Funcs(sprig.FuncMap()).Parse(c.templates.Duplicates())
 		if err != nil {
 			return "", err
 		}
 		return executeTemplate(sqlTemplate, data)
 	} else if rule.Validator == SqlValidator {
-		sqlTemplate, err := template.New("sql").Funcs(sprig.FuncMap()).Parse(c.templates.CustomSql())
+		sqlTemplate, err := NewTexTemplate("sql").Funcs(sprig.FuncMap()).Parse(c.templates.CustomSql())
 		if err != nil {
 			return "", err
 		}
@@ -99,7 +103,7 @@ func executeTemplate(template *template.Template, data map[string]any) (string, 
 	return buf.String(), nil
 }
 
-func (c *Compiler) Compile(spec *spec.Spec) (string, error) {
+func (c *Compiler) ToQueries(spec *spec.Spec) ([]string, error) {
 	statements := []string{}
 	for idx := range spec.Models {
 		model := spec.Models[idx]
@@ -107,10 +111,49 @@ func (c *Compiler) Compile(spec *spec.Spec) (string, error) {
 			rule := model.Rules[ruleIdx]
 			statement, err := c.CompileRule(&model, &rule)
 			if err != nil {
-				return "", nil
+				return nil, nil
 			}
 			statements = append(statements, statement)
 		}
 	}
-	return strings.Join(statements, "\n"), nil
+	return statements, nil
+}
+
+func IsLast(index, length int) bool {
+	return index == length-1
+}
+
+func NewTexTemplate(name string) *template.Template {
+	return template.New(name).Funcs(sprig.TxtFuncMap()).Funcs(template.FuncMap{
+		"isLast": IsLast,
+	})
+}
+
+func (c *Compiler) ToQuery(spec *spec.Spec) (string, error) {
+	queries, err := c.ToQueries(spec)
+	if err != nil {
+		return "", err
+	}
+
+	sqlTemplate, err := NewTexTemplate("sql").Parse(c.templates.Union())
+	if err != nil {
+		return "", err
+	}
+
+	data := map[string]interface{}{
+		"Queries": queries,
+	}
+
+	return executeTemplate(sqlTemplate, data)
+}
+
+func NewCompilerFromDSN(dsn string) (*Compiler, error) {
+	if IsOdps(dsn) {
+		templates := odps.OdpsTemplates{}
+		compiler := NewCompiler(templates)
+		compiler.AppendSemicolon = true
+		return compiler, nil
+	} else {
+		return nil, errors.New("invalid vendor")
+	}
 }

@@ -4,9 +4,9 @@ import (
 	"dq/pkg/dq/v2/spec"
 	"dq/pkg/dq/v2/vendors/odps"
 	"errors"
-	"fmt"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/jmoiron/sqlx"
 )
@@ -17,58 +17,98 @@ type Executor struct {
 	compiler *Compiler
 }
 
-func NewExecutor(dsn string) *Executor {
+func NewExecutor(dsn string, compiler *Compiler) *Executor {
 	return &Executor{
-		dsn: dsn,
+		dsn:      dsn,
+		compiler: compiler,
 	}
 }
 
 type ResultRow struct {
-	IsFailed string
-	IsOk     string
+	ProcTime  time.Time `json:"proc_time" db:"proc_time"`
+	TableName string    `json:"table_name" db:"table_name"`
+	RuleName  string    `json:"rule_name" db:"rule_name"`
+	Validator string    `json:"validator" db:"validator"`
+	IsFailed  string    `json:"is_failed" db:"is_failed"`
+	IsOk      string    `json:"is_ok" db:"is_ok"`
+	Value     int64     `json:"value" db:"value"`
 }
 
-func (executor *Executor) Execute(rulesPath string, format string) (bool, error) {
-	sql, err := executor.GenerateSQL(rulesPath, format)
+func (executor *Executor) ConnectDB() error {
+	if IsOdps(executor.dsn) {
+		db, err := odps.NewDB(executor.dsn)
+		if err != nil {
+			return err
+		}
+		if err := db.Ping(); err != nil {
+			return err
+		}
+		executor.db = db
+	} else {
+		return errors.New("not supported")
+	}
+
+	return nil
+}
+
+func (executor *Executor) Close() error {
+	if executor.db != nil {
+		return executor.db.Close()
+	}
+	return nil
+}
+
+func IsOdps(dsn string) bool {
+	return strings.Contains(dsn, "maxcompute")
+}
+
+func (executor *Executor) Query(spec *spec.Spec) ([]ResultRow, error) {
+	sql, err := executor.compiler.ToQuery(spec)
 	if err != nil {
-		return false, err
+		return nil, err
+	}
+
+	if IsOdps(executor.dsn) {
+		sql += ";"
 	}
 
 	var resultRows []ResultRow
 	rows, err := executor.db.Queryx(sql)
 	if err != nil {
-		for rows.Next() {
-			var resultRow ResultRow
-			if err := rows.StructScan(&resultRow); err != nil {
-				return false, nil
-			}
-			resultRows = append(resultRows, resultRow)
-		}
+		return nil, err
 	}
 
-	fmt.Println(resultRows)
+	for rows.Next() {
+		var resultRow ResultRow
+		if err := rows.StructScan(&resultRow); err != nil {
+			return nil, err
+		}
+		resultRows = append(resultRows, resultRow)
+	}
 
-	return true, nil
+	return resultRows, nil
 }
 
-func (executor *Executor) GenerateSQL(rulesPath string, format string) (string, error) {
+// func (executor *Executor) GenerateSingleQuery(rulesPath string, format string) (string, error) {
+// 	statements, err := executor.GenerateQueries(rulesPath, format)
+// 	if err != nil {
+// 		return nil, err
+// 	}
+
+// 	return nil, nil
+// }
+
+func ParseSpec(rulesPath string) (*spec.Spec, error) {
 	bytes, err := os.ReadFile(rulesPath)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 	spec, err := spec.Parse(bytes, func(*spec.Spec) error {
 		return nil
 	})
 
 	if err != nil {
-		return "", err
+		return nil, err
 	}
-
-	if strings.Contains(executor.dsn, "maxcompute") {
-		templates := odps.OdpsTemplates{}
-		compiler := NewCompiler(templates)
-		return compiler.Compile(spec)
-	} else {
-		return "", errors.New("invalid vendor")
-	}
+	return spec, nil
 }
