@@ -14,6 +14,7 @@ clean:
 	rm -rf bin/dq*
 
 install:
+	go get -u github.com/rakyll/gotest
 	go install github.com/rakyll/gotest
 	go install golang.org/x/tools/cmd/deadcode@latest
 
