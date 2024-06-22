@@ -1,6 +1,6 @@
 package templates
 
-type Templates interface {
+type SqlTemplates interface {
 	RowsCount() string
 	Duplicates() string
 	CustomSql() string

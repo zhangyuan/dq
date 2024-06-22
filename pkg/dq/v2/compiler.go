@@ -2,10 +2,8 @@ package v2
 
 import (
 	"bytes"
+	"dq/pkg/dq/v2/adapters"
 	"dq/pkg/dq/v2/spec"
-	"dq/pkg/dq/v2/templates"
-	"dq/pkg/dq/v2/vendors/odps"
-	"errors"
 	"fmt"
 	"strings"
 	"text/template"
@@ -19,13 +17,12 @@ const NotNullValidator = "not_null"
 const SqlValidator = "sql"
 
 type Compiler struct {
-	templates       templates.Templates
-	AppendSemicolon bool
+	Adatper *adapters.Adapter
 }
 
-func NewCompiler(templates templates.Templates) *Compiler {
+func NewCompiler(adapter *adapters.Adapter) *Compiler {
 	return &Compiler{
-		templates: templates,
+		Adatper: adapter,
 	}
 }
 
@@ -47,7 +44,6 @@ func CompileExpect(expect *spec.Expect) []string {
 	if expect.LTE != nil {
 		conditions = append(conditions, fmt.Sprintf("value <= %d", *expect.LTE))
 	}
-
 	return conditions
 }
 
@@ -71,20 +67,20 @@ func (c *Compiler) CompileRule(model *spec.Model, rule *spec.Rule) (string, erro
 	}
 
 	if rule.Validator == RowsCountValidator {
-		sqlTemplate, err := NewTexTemplate("sql").Parse(c.templates.RowsCount())
+		sqlTemplate, err := NewTexTemplate("sql").Parse(c.Adatper.Templates.RowsCount())
 		if err != nil {
 			return "", nil
 		}
 		return executeTemplate(sqlTemplate, data)
 	} else if rule.Validator == DuplicatesValidator {
 		data["Columns"] = rule.Columns
-		sqlTemplate, err := NewTexTemplate("sql").Funcs(sprig.FuncMap()).Parse(c.templates.Duplicates())
+		sqlTemplate, err := NewTexTemplate("sql").Funcs(sprig.FuncMap()).Parse(c.Adatper.Templates.Duplicates())
 		if err != nil {
 			return "", err
 		}
 		return executeTemplate(sqlTemplate, data)
 	} else if rule.Validator == SqlValidator {
-		sqlTemplate, err := NewTexTemplate("sql").Funcs(sprig.FuncMap()).Parse(c.templates.CustomSql())
+		sqlTemplate, err := NewTexTemplate("sql").Funcs(sprig.FuncMap()).Parse(c.Adatper.Templates.CustomSql())
 		if err != nil {
 			return "", err
 		}
@@ -135,7 +131,7 @@ func (c *Compiler) ToQuery(spec *spec.Spec) (string, error) {
 		return "", err
 	}
 
-	sqlTemplate, err := NewTexTemplate("sql").Parse(c.templates.Union())
+	sqlTemplate, err := NewTexTemplate("sql").Parse(c.Adatper.Templates.Union())
 	if err != nil {
 		return "", err
 	}
@@ -145,15 +141,4 @@ func (c *Compiler) ToQuery(spec *spec.Spec) (string, error) {
 	}
 
 	return executeTemplate(sqlTemplate, data)
-}
-
-func NewCompilerFromDSN(dsn string) (*Compiler, error) {
-	if IsOdps(dsn) {
-		templates := odps.OdpsTemplates{}
-		compiler := NewCompiler(templates)
-		compiler.AppendSemicolon = true
-		return compiler, nil
-	} else {
-		return nil, errors.New("invalid vendor")
-	}
 }

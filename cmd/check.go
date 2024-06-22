@@ -2,6 +2,7 @@ package cmd
 
 import (
 	v2 "dq/pkg/dq/v2"
+	"dq/pkg/dq/v2/adapters"
 	"dq/pkg/dq/v2/report"
 	"encoding/json"
 	"fmt"
@@ -27,12 +28,17 @@ var queryCmd = &cobra.Command{
 			log.Fatalln(err)
 		}
 
-		compiler, err := v2.NewCompilerFromDSN(dsn)
+		adapter, err := adapters.NewAdapter(dsn)
 		if err != nil {
 			log.Fatalln(err)
 		}
 
-		executor := v2.NewExecutor(dsn, compiler)
+		compiler := v2.NewCompiler(adapter)
+		if err != nil {
+			log.Fatalln(err)
+		}
+
+		executor := v2.NewExecutor(adapter, compiler)
 		defer executor.Close()
 
 		if err := executor.ConnectDB(); err != nil {
@@ -73,7 +79,12 @@ var generateQueryCmd = &cobra.Command{
 			log.Fatalln(err)
 		}
 
-		compiler, err := v2.NewCompilerFromDSN(dsn)
+		adapter, err := adapters.NewAdapter(dsn)
+		if err != nil {
+			log.Fatalln(err)
+		}
+
+		compiler := v2.NewCompiler(adapter)
 		if err != nil {
 			log.Fatalln(err)
 		}

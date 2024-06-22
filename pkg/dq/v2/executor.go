@@ -1,25 +1,24 @@
 package v2
 
 import (
+	"dq/pkg/dq/v2/adapters"
+	"dq/pkg/dq/v2/adapters/odps"
 	"dq/pkg/dq/v2/db"
 	"dq/pkg/dq/v2/spec"
-	"dq/pkg/dq/v2/vendors/odps"
-	"errors"
 	"os"
-	"strings"
 
 	"github.com/jmoiron/sqlx"
 )
 
 type Executor struct {
-	dsn      string
+	adapter  *adapters.Adapter
 	db       *sqlx.DB
 	compiler *Compiler
 }
 
-func NewExecutor(dsn string, compiler *Compiler) *Executor {
+func NewExecutor(adapter *adapters.Adapter, compiler *Compiler) *Executor {
 	return &Executor{
-		dsn:      dsn,
+		adapter:  adapter,
 		compiler: compiler,
 	}
 }
@@ -32,18 +31,20 @@ type Result struct {
 }
 
 func (executor *Executor) ConnectDB() error {
-	if IsOdps(executor.dsn) {
-		db, err := odps.NewDB(executor.dsn)
+	var db *sqlx.DB
+	var err error
+
+	if executor.adapter.Name == odps.Name {
+		db, err = odps.NewDB(executor.adapter.DSN)
 		if err != nil {
 			return err
 		}
-		if err := db.Ping(); err != nil {
-			return err
-		}
-		executor.db = db
-	} else {
-		return errors.New("not supported")
 	}
+
+	if err := db.Ping(); err != nil {
+		return err
+	}
+	executor.db = db
 
 	return nil
 }
@@ -55,17 +56,13 @@ func (executor *Executor) Close() error {
 	return nil
 }
 
-func IsOdps(dsn string) bool {
-	return strings.Contains(dsn, "maxcompute")
-}
-
 func (executor *Executor) Query(spec *spec.Spec) (*Result, error) {
 	sql, err := executor.compiler.ToQuery(spec)
 	if err != nil {
 		return nil, err
 	}
 
-	if IsOdps(executor.dsn) {
+	if executor.adapter.Name == odps.Name {
 		sql += ";"
 	}
 
