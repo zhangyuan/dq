@@ -61,6 +61,9 @@ var queryCmd = &cobra.Command{
 			fmt.Println(string(bytes))
 		}
 
+		if !result.IsOk {
+			os.Exit(1)
+		}
 	},
 }
 

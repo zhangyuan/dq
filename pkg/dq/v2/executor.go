@@ -3,8 +3,8 @@ package v2
 import (
 	"dq/pkg/dq/v2/adapters"
 	"dq/pkg/dq/v2/adapters/odps"
-	"dq/pkg/dq/v2/db"
 	"dq/pkg/dq/v2/spec"
+	"time"
 
 	"github.com/jmoiron/sqlx"
 )
@@ -22,11 +22,20 @@ func NewExecutor(adapter *adapters.Adapter, compiler *Compiler) *Executor {
 	}
 }
 
-type Record []interface{}
+type ResultRecord struct {
+	ProcTime  time.Time `db:"proc_time"`
+	TableName string    `db:"table_name"`
+	RuleName  string    `db:"rule_name"`
+	Validator string    `db:"validator"`
+	IsFailed  int       `db:"is_failed"`
+	IsOk      int       `db:"is_ok"`
+	Value     int       `db:"value"`
+}
 
 type Result struct {
-	ColumnNames []string `json:"column_names"`
-	Records     []Record `json:"records"`
+	ColumnNames []string       `json:"column_names"`
+	Records     []ResultRecord `json:"records"`
+	IsOk        bool
 }
 
 func (executor *Executor) ConnectDB() error {
@@ -66,20 +75,23 @@ func (executor *Executor) Query(spec *spec.Spec) (*Result, error) {
 		sql += ";"
 	}
 
-	var result = Result{}
+	var result = Result{
+		IsOk: true,
+	}
 
-	if err := db.Query(executor.db, sql, func(columNames []string) error {
-		return nil
-	}, func(columNames []string) error {
-		result.ColumnNames = columNames
-		return nil
-	}, func(values []any) error {
-		result.Records = append(result.Records, values)
-		return nil
-	}); err != nil {
+	var resultRows []ResultRecord
+
+	if err := executor.db.Select(&resultRows, sql); err != nil {
 		return nil, err
 	}
 
+	for idx := range resultRows {
+		if resultRows[idx].IsFailed == 1 {
+			result.IsOk = false
+			break
+		}
+	}
+	result.Records = resultRows
 	return &result, nil
 }
 

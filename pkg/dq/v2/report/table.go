@@ -8,15 +8,26 @@ import (
 
 func NewTable(result *v2.Result) table.Writer {
 	writer := table.NewWriter()
-	columnNames := make([]interface{}, len(result.ColumnNames))
-	for idx := range result.ColumnNames {
-		columnNames[idx] = result.ColumnNames[idx]
-	}
-	writer.AppendHeader(columnNames)
+
+	writer.AppendHeader(table.Row{
+		"proc_time",
+		"table_name",
+		"rule_name",
+		"is_ok",
+		"is_failed",
+		"value",
+	})
 
 	for idx := range result.Records {
 		record := result.Records[idx]
-		writer.AppendRow(table.Row(record))
+		writer.AppendRow(table.Row{
+			record.ProcTime,
+			record.TableName,
+			record.RuleName,
+			record.IsOk,
+			record.IsFailed,
+			record.Value,
+		})
 	}
 	return writer
 }
