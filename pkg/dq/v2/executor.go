@@ -4,6 +4,7 @@ import (
 	"dq/pkg/dq/v2/adapters"
 	"dq/pkg/dq/v2/adapters/odps"
 	"dq/pkg/dq/v2/spec"
+	"dq/pkg/dq/v2/templates/simple"
 	"time"
 
 	"github.com/jmoiron/sqlx"
@@ -13,6 +14,7 @@ type Executor struct {
 	adapter  *adapters.Adapter
 	db       *sqlx.DB
 	compiler *Compiler
+	params   map[string]string
 }
 
 func NewExecutor(adapter *adapters.Adapter, compiler *Compiler) *Executor {
@@ -64,8 +66,8 @@ func (executor *Executor) Close() error {
 	return nil
 }
 
-func (executor *Executor) Query(spec *spec.Spec) (*Result, error) {
-	sql, err := executor.compiler.ToQuery(spec)
+func (executor *Executor) Query(spec *spec.Spec, params *map[string]any) (*Result, error) {
+	sql, err := executor.compiler.ToQuery(spec, params)
 	if err != nil {
 		return nil, err
 	}
@@ -80,6 +82,11 @@ func (executor *Executor) Query(spec *spec.Spec) (*Result, error) {
 	}
 
 	var resultRows []ResultRecord
+
+	sql, err = simple.Compile(sql, *params)
+	if err != nil {
+		return nil, err
+	}
 
 	if err := executor.db.Select(&resultRows, sql); err != nil {
 		return nil, err

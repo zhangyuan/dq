@@ -3,6 +3,7 @@ package cmd
 import (
 	v2 "dq/pkg/dq/v2"
 	"dq/pkg/dq/v2/adapters"
+	"dq/pkg/dq/v2/helpers"
 	"dq/pkg/dq/v2/report"
 	"encoding/json"
 	"fmt"
@@ -38,6 +39,11 @@ var queryCmd = &cobra.Command{
 			log.Fatalln(err)
 		}
 
+		params, err := GetParams(paramsPath)
+		if err != nil {
+			log.Fatalln(err)
+		}
+
 		executor := v2.NewExecutor(adapter, compiler)
 		defer executor.Close()
 
@@ -45,7 +51,7 @@ var queryCmd = &cobra.Command{
 			log.Fatalln(err)
 		}
 
-		result, err := executor.Query(spec)
+		result, err := executor.Query(spec, params)
 		if err != nil {
 			log.Fatalln(err)
 		}
@@ -92,12 +98,25 @@ var generateQueryCmd = &cobra.Command{
 			log.Fatalln(err)
 		}
 
-		query, err := compiler.ToQuery(spec)
+		params, err := GetParams(paramsPath)
+		if err != nil {
+			log.Fatalln(err)
+		}
+
+		query, err := compiler.ToQuery(spec, params)
 		if err != nil {
 			log.Fatalln(err)
 		}
 		fmt.Println(query)
 	},
+}
+
+func GetParams(path string) (*map[string]any, error) {
+	if paramsPath != "" {
+		return helpers.ParseYAMLFromFile[map[string]any](paramsPath)
+	} else {
+		return &map[string]any{}, nil
+	}
 }
 
 var generateQueriesCmd = &cobra.Command{
@@ -125,7 +144,12 @@ var generateQueriesCmd = &cobra.Command{
 			log.Fatalln(err)
 		}
 
-		statements, err := compiler.ToQueries(spec)
+		params, err := GetParams(paramsPath)
+		if err != nil {
+			log.Fatalln(err)
+		}
+
+		statements, err := compiler.ToQueries(spec, params)
 		if err != nil {
 			log.Fatalln(err)
 		}
@@ -141,18 +165,22 @@ var generateQueriesCmd = &cobra.Command{
 
 var specPath string
 var format string
+var paramsPath string
 
 func init() {
 	rootCmd.AddCommand(queryCmd)
 	queryCmd.Flags().StringVarP(&specPath, "spec", "s", "dq.yaml", "Path to the rules file")
 	queryCmd.Flags().StringVarP(&format, "format", "f", "table", "Output format: table, json")
+	queryCmd.Flags().StringVar(&paramsPath, "params-path", "", "Path to params file")
 	_ = queryCmd.MarkFlagRequired("spec")
 
 	rootCmd.AddCommand(generateQueryCmd)
 	generateQueryCmd.Flags().StringVarP(&specPath, "spec", "s", "dq.yaml", "Path to the rules file")
+	generateQueryCmd.Flags().StringVar(&paramsPath, "params-path", "", "Path to params file")
 	_ = generateQueryCmd.MarkFlagRequired("spec")
 
 	rootCmd.AddCommand(generateQueriesCmd)
 	generateQueriesCmd.Flags().StringVarP(&specPath, "spec", "s", "dq.yaml", "Path to the rules file")
+	generateQueriesCmd.Flags().StringVar(&paramsPath, "params-path", "", "Path to params file")
 	_ = generateQueriesCmd.MarkFlagRequired("spec")
 }

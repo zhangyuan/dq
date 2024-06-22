@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"dq/pkg/dq/v2/adapters"
 	"dq/pkg/dq/v2/spec"
+	"dq/pkg/dq/v2/templates/simple"
 	"fmt"
 	"strings"
 	"text/template"
@@ -99,7 +100,7 @@ func executeTemplate(template *template.Template, data map[string]any) (string, 
 	return buf.String(), nil
 }
 
-func (c *Compiler) ToQueries(spec *spec.Spec) ([]string, error) {
+func (c *Compiler) ToQueries(spec *spec.Spec, params *map[string]any) ([]string, error) {
 	statements := []string{}
 	for idx := range spec.Models {
 		model := spec.Models[idx]
@@ -109,7 +110,13 @@ func (c *Compiler) ToQueries(spec *spec.Spec) ([]string, error) {
 			if err != nil {
 				return nil, nil
 			}
-			statements = append(statements, statement)
+
+			rendered, err := simple.Compile(statement, *params)
+			if err != nil {
+				return nil, err
+			}
+
+			statements = append(statements, rendered)
 		}
 	}
 	return statements, nil
@@ -125,8 +132,8 @@ func NewTexTemplate(name string) *template.Template {
 	})
 }
 
-func (c *Compiler) ToQuery(spec *spec.Spec) (string, error) {
-	queries, err := c.ToQueries(spec)
+func (c *Compiler) ToQuery(spec *spec.Spec, params *map[string]any) (string, error) {
+	queries, err := c.ToQueries(spec, params)
 	if err != nil {
 		return "", err
 	}
@@ -140,5 +147,9 @@ func (c *Compiler) ToQuery(spec *spec.Spec) (string, error) {
 		"Queries": queries,
 	}
 
-	return executeTemplate(sqlTemplate, data)
+	rendered, err := executeTemplate(sqlTemplate, data)
+	if err != nil {
+		return "", err
+	}
+	return simple.Compile(rendered, *params)
 }
