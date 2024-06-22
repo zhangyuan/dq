@@ -7,7 +7,7 @@ import (
 )
 
 func TestCompileTemplate(t *testing.T) {
-	vars := map[string]string{
+	vars := map[string]interface{}{
 		"db": "db_dev",
 		"ds": "20240101",
 	}

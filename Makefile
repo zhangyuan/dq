@@ -16,6 +16,7 @@ clean:
 install:
 	go install github.com/rakyll/gotest@latest
 	go install golang.org/x/tools/cmd/deadcode@latest
+	go install github.com/golangci/golangci-lint/cmd/golangci-lint@v1.59.1
 
 build-macos:
 	GOOS=darwin GOARCH=amd64 go build -o bin/dq_darwin-amd64

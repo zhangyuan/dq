@@ -1,19 +1,19 @@
 WITH final AS (
 {{- $length := len .Queries -}}
 
-{{- if eq $length 0 -}}
+{{- if eq $length 1 -}}
+
+{{- range $idx, $query := .Queries }}
+{{ indent 2 $query }}
+{{- end -}}
+
+{{- else -}}
 
 {{- range $idx, $query := .Queries }}
   (
 {{ indent 4 $query }}
   )
   {{ if not (isLast $idx $length) }}UNION ALL{{end -}}
-{{- end -}}
-
-{{- else -}}
-
-{{- range $idx, $query := .Queries }}
-{{ indent 2 $query }}
 {{- end -}}
 
 {{- end }}
