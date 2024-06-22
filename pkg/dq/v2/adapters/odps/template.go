@@ -1,6 +1,9 @@
 package odps
 
-import _ "embed"
+import (
+	_ "embed"
+	"strings"
+)
 
 //go:embed templates/rows_count.tmpl.sql
 var rowsCount string
@@ -17,17 +20,17 @@ var unionSQL string
 type OdpsTemplates struct{}
 
 func (t OdpsTemplates) RowsCount() string {
-	return rowsCount
+	return strings.TrimSpace(rowsCount)
 }
 
 func (t OdpsTemplates) Duplicates() string {
-	return duplicates
+	return strings.TrimSpace(duplicates)
 }
 
 func (t OdpsTemplates) CustomSql() string {
-	return customSQL
+	return strings.TrimSpace(customSQL)
 }
 
 func (t OdpsTemplates) Union() string {
-	return unionSQL
+	return strings.TrimSpace(unionSQL)
 }
