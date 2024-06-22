@@ -1,5 +1,7 @@
 .PHONY: build
 build:
+	deadcode .
+	golangci-lint run
 	go build -v ./...
 
 .PHONY: test
@@ -13,6 +15,7 @@ clean:
 
 install:
 	go install github.com/rakyll/gotest
+	go install golang.org/x/tools/cmd/deadcode@latest
 
 build-macos:
 	GOOS=darwin GOARCH=amd64 go build -o bin/dq_darwin-amd64

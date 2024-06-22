@@ -21,8 +21,9 @@ jobs:
         uses: golangci/golangci-lint-action@v4
         with:
           version: v1.55.2
-      - name: Install gotest
-        run: go install github.com/rakyll/gotest
+      - name: Install
+        run: make install
+      - run: make build
       - name: Test
         run: gotest -v ./...
       - name: Build

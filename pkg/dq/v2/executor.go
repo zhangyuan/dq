@@ -5,7 +5,6 @@ import (
 	"dq/pkg/dq/v2/adapters/odps"
 	"dq/pkg/dq/v2/db"
 	"dq/pkg/dq/v2/spec"
-	"os"
 
 	"github.com/jmoiron/sqlx"
 )
@@ -62,6 +61,7 @@ func (executor *Executor) Query(spec *spec.Spec) (*Result, error) {
 		return nil, err
 	}
 
+	// odps requires semicolon.
 	if executor.adapter.Name == odps.Name {
 		sql += ";"
 	}
@@ -84,16 +84,5 @@ func (executor *Executor) Query(spec *spec.Spec) (*Result, error) {
 }
 
 func ParseSpec(rulesPath string) (*spec.Spec, error) {
-	bytes, err := os.ReadFile(rulesPath)
-	if err != nil {
-		return nil, err
-	}
-	spec, err := spec.Parse(bytes, func(*spec.Spec) error {
-		return nil
-	})
-
-	if err != nil {
-		return nil, err
-	}
-	return spec, nil
+	return spec.ParseFromFile(rulesPath, func(*spec.Spec) error { return nil })
 }

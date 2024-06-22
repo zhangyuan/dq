@@ -42,7 +42,9 @@ func Query(db *sqlx.DB, query string, onColumnTypesFunc func(columNames []string
 		if err != nil {
 			return err
 		}
-		onRowFunc(record)
+		if err := onRowFunc(record); err != nil {
+			return err
+		}
 	}
 
 	return nil

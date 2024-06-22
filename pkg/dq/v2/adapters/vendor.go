@@ -13,7 +13,7 @@ type Adapter struct {
 	Templates templates.SqlTemplates
 }
 
-func NewAdapter(dsn string) (*Adapter, error) {
+func NewAdapterFromDSN(dsn string) (*Adapter, error) {
 	if strings.Contains(dsn, "maxcompute.aliyun.com/api") {
 		return &Adapter{
 			Name:      odps.Name,

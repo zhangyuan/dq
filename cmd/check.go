@@ -28,7 +28,7 @@ var queryCmd = &cobra.Command{
 			log.Fatalln(err)
 		}
 
-		adapter, err := adapters.NewAdapter(dsn)
+		adapter, err := adapters.NewAdapterFromDSN(dsn)
 		if err != nil {
 			log.Fatalln(err)
 		}
@@ -79,7 +79,7 @@ var generateQueryCmd = &cobra.Command{
 			log.Fatalln(err)
 		}
 
-		adapter, err := adapters.NewAdapter(dsn)
+		adapter, err := adapters.NewAdapterFromDSN(dsn)
 		if err != nil {
 			log.Fatalln(err)
 		}

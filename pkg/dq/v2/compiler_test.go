@@ -1,17 +1,25 @@
 package v2
 
 import (
+	"dq/pkg/dq/v2/adapters"
+	"dq/pkg/dq/v2/adapters/odps"
 	"dq/pkg/dq/v2/spec"
-	"dq/pkg/dq/v2/vendors/odps"
 	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
 )
 
+func NewOdpsAdapter(dsn string) *adapters.Adapter {
+	return &adapters.Adapter{
+		Name:      odps.Name,
+		DSN:       dsn,
+		Templates: odps.OdpsTemplates{},
+	}
+}
+
 func TestCompileRowCountRule(t *testing.T) {
-	templates := odps.OdpsTemplates{}
-	compiler := NewCompiler(templates)
+	compiler := NewCompiler(NewOdpsAdapter("dummy"))
 	model := spec.Model{Table: "orders", Filter: "deleted = false"}
 	gtValue := 0
 	rule := spec.Rule{
@@ -24,13 +32,16 @@ func TestCompileRowCountRule(t *testing.T) {
 
 	expected := strings.TrimSpace(`
 WITH result AS (
-	SELECT COUNT(*) AS value FROM orders WHERE deleted = false
+  SELECT COUNT(*) AS value FROM orders WHERE deleted = false
 )
-SELECT GETDATE() AS proc_time,
-	IF(value > 0, 0, 1) is_failed,
-	IF(value > 0, 1, 0) is_ok,
-	"orders" AS table_name,
-	"rows_count" AS validator
+SELECT
+  GETDATE() AS proc_time,
+  IF(value > 0, 0, 1) is_failed,
+  IF(value > 0, 1, 0) is_ok,
+  "orders" AS table_name,
+  "table should not be empty" AS rule_name,
+  "rows_count" AS validator,
+  value AS value
 FROM result`)
 
 	stmt, err := compiler.CompileRule(&model, &rule)
@@ -39,8 +50,7 @@ FROM result`)
 }
 
 func TestCompileRowCountRuleWithExtraFilter(t *testing.T) {
-	templates := odps.OdpsTemplates{}
-	compiler := NewCompiler(templates)
+	compiler := NewCompiler(NewOdpsAdapter("dummy"))
 	model := spec.Model{Table: "orders", Filter: "deleted = false"}
 	gtValue := 0
 	rule := spec.Rule{
@@ -54,13 +64,16 @@ func TestCompileRowCountRuleWithExtraFilter(t *testing.T) {
 
 	expected := strings.TrimSpace(`
 WITH result AS (
-	SELECT COUNT(*) AS value FROM orders WHERE deleted = false AND type IS NOT NULL
+  SELECT COUNT(*) AS value FROM orders WHERE deleted = false AND type IS NOT NULL
 )
-SELECT GETDATE() AS proc_time,
-	IF(value > 0, 0, 1) is_failed,
-	IF(value > 0, 1, 0) is_ok,
-	"orders" AS table_name,
-	"rows_count" AS validator
+SELECT
+  GETDATE() AS proc_time,
+  IF(value > 0, 0, 1) is_failed,
+  IF(value > 0, 1, 0) is_ok,
+  "orders" AS table_name,
+  "table should not be empty" AS rule_name,
+  "rows_count" AS validator,
+  value AS value
 FROM result`)
 
 	stmt, err := compiler.CompileRule(&model, &rule)
@@ -69,8 +82,7 @@ FROM result`)
 }
 
 func TestCompileRowCountRuleWithFilterOverwritten(t *testing.T) {
-	templates := odps.OdpsTemplates{}
-	compiler := NewCompiler(templates)
+	compiler := NewCompiler(NewOdpsAdapter("dummy"))
 	model := spec.Model{Table: "orders", Filter: "deleted = false"}
 	gtValue := 0
 	rule := spec.Rule{
@@ -84,13 +96,16 @@ func TestCompileRowCountRuleWithFilterOverwritten(t *testing.T) {
 
 	expected := strings.TrimSpace(`
 WITH result AS (
-	SELECT COUNT(*) AS value FROM orders WHERE 1=1
+  SELECT COUNT(*) AS value FROM orders WHERE 1=1
 )
-SELECT GETDATE() AS proc_time,
-	IF(value > 0, 0, 1) is_failed,
-	IF(value > 0, 1, 0) is_ok,
-	"orders" AS table_name,
-	"rows_count" AS validator
+SELECT
+  GETDATE() AS proc_time,
+  IF(value > 0, 0, 1) is_failed,
+  IF(value > 0, 1, 0) is_ok,
+  "orders" AS table_name,
+  "table should not be empty" AS rule_name,
+  "rows_count" AS validator,
+  value AS value
 FROM result`)
 
 	stmt, err := compiler.CompileRule(&model, &rule)
@@ -99,8 +114,7 @@ FROM result`)
 }
 
 func TestCompileDuplicatesRule(t *testing.T) {
-	templates := odps.OdpsTemplates{}
-	compiler := NewCompiler(templates)
+	compiler := NewCompiler(NewOdpsAdapter("dummy"))
 
 	model := spec.Model{Table: "orders", Filter: "deleted = false"}
 	expectValue := 0
@@ -115,17 +129,20 @@ func TestCompileDuplicatesRule(t *testing.T) {
 
 	expected := strings.TrimSpace(`
 WITH query AS (
-	SELECT order_no FROM orders WHERE deleted = false
-	GROUP BY order_no
-	HAVING COUNT(*) > 1
+  SELECT order_no FROM orders WHERE deleted = false
+  GROUP BY order_no
+  HAVING COUNT(*) > 1
 ), result AS (
-	SELECT COUNT(*) AS value FROM query
-),
-SELECT GETDATE() AS proc_time,
-	IF(value = 0, 0, 1) is_failed,
-	IF(value = 0, 1, 0) is_ok,
-	"orders" AS table_name,
-	"duplicates" AS validator
+  SELECT COUNT(*) AS value FROM query
+)
+SELECT
+  GETDATE() AS proc_time,
+  IF(value = 0, 0, 1) is_failed,
+  IF(value = 0, 1, 0) is_ok,
+  "orders" AS table_name,
+  "order_no should be unique" AS rule_name,
+  "duplicates" AS validator,
+  value AS value
 FROM result`)
 
 	stmt, err := compiler.CompileRule(&model, &rule)
@@ -134,8 +151,7 @@ FROM result`)
 }
 
 func TestCompileDuplicatesRuleGivenMultileColumns(t *testing.T) {
-	templates := odps.OdpsTemplates{}
-	compiler := NewCompiler(templates)
+	compiler := NewCompiler(NewOdpsAdapter("dummy"))
 
 	model := spec.Model{Table: "work_orders", Filter: "deleted = false"}
 	expectValue := 0
@@ -150,17 +166,20 @@ func TestCompileDuplicatesRuleGivenMultileColumns(t *testing.T) {
 
 	expected := strings.TrimSpace(`
 WITH query AS (
-	SELECT order_no, production_date FROM work_orders WHERE deleted = false
-	GROUP BY order_no, production_date
-	HAVING COUNT(*) > 1
+  SELECT order_no, production_date FROM work_orders WHERE deleted = false
+  GROUP BY order_no, production_date
+  HAVING COUNT(*) > 1
 ), result AS (
-	SELECT COUNT(*) AS value FROM query
-),
-SELECT 	GETDATE() AS proc_time,
-	IF(value = 0, 0, 1) is_failed,
-	IF(value = 0, 1, 0) is_ok,
-	"work_orders" AS table_name,
-	"duplicates" AS validator
+  SELECT COUNT(*) AS value FROM query
+)
+SELECT
+  GETDATE() AS proc_time,
+  IF(value = 0, 0, 1) is_failed,
+  IF(value = 0, 1, 0) is_ok,
+  "work_orders" AS table_name,
+  "order_no, production_date should be unique" AS rule_name,
+  "duplicates" AS validator,
+  value AS value
 FROM result`)
 
 	stmt, err := compiler.CompileRule(&model, &rule)
@@ -169,8 +188,7 @@ FROM result`)
 }
 
 func TestCompileSqlRule(t *testing.T) {
-	templates := odps.OdpsTemplates{}
-	compiler := NewCompiler(templates)
+	compiler := NewCompiler(NewOdpsAdapter("dummy"))
 
 	model := spec.Model{Table: "work_orders", Filter: "deleted = false"}
 	expectValue := 0
@@ -187,15 +205,18 @@ SELECT count(*) AS value from work_orders WHERE status NOT IN (SELECT * FROM VAL
 
 	expected := strings.TrimSpace(`
 WITH query AS (
-	SELECT count(*) AS value from work_orders WHERE status NOT IN (SELECT * FROM VALUES ('CREATED'), ('COMPLELTED') AS t(status))
+  SELECT count(*) AS value from work_orders WHERE status NOT IN (SELECT * FROM VALUES ('CREATED'), ('COMPLELTED') AS t(status))
 ), result AS (
-	SELECT value FROM query LIMIT 1
-),
-SELECT 	GETDATE() AS proc_time,
-	IF(value = 0, 0, 1) is_failed,
-	IF(value = 0, 1, 0) is_ok,
-	"work_orders" AS table_name,
-	"sql" AS validator
+  SELECT value FROM query LIMIT 1
+)
+SELECT
+  GETDATE() AS proc_time,
+  IF(value = 0, 0, 1) is_failed,
+  IF(value = 0, 1, 0) is_ok,
+  "work_orders" AS table_name,
+  "status should be valid" AS rule_name,
+  "sql" AS validator,
+  value AS value
 FROM result`)
 
 	stmt, err := compiler.CompileRule(&model, &rule)
