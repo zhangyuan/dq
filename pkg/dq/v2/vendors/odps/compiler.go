@@ -29,10 +29,42 @@ func (c *Compiler) CompileRule(table *spec.Model, rule *spec.Rule) (string, erro
 	return CompileRule(table, rule)
 }
 
+func CompileExpect(expect *spec.Expect) []string {
+	conditions := []string{}
+
+	if expect.EQ != nil {
+		conditions = append(conditions, fmt.Sprintf("value = %d", *expect.EQ))
+	}
+	if expect.GT != nil {
+		conditions = append(conditions, fmt.Sprintf("value > %d", *expect.GT))
+	}
+	if expect.LT != nil {
+		conditions = append(conditions, fmt.Sprintf("value < %d", *expect.LT))
+	}
+	if expect.GTE != nil {
+		conditions = append(conditions, fmt.Sprintf("value >= %d", *expect.GTE))
+	}
+	if expect.LTE != nil {
+		conditions = append(conditions, fmt.Sprintf("value <= %d", *expect.LTE))
+	}
+
+	return conditions
+}
+
 func CompileRule(model *spec.Model, rule *spec.Rule) (string, error) {
+	var filter string
+	if rule.Filter != "" {
+		filter = rule.Filter
+	} else {
+		filter = model.Filter
+	}
+	if rule.ExtraFilter != "" {
+		filter = fmt.Sprintf("%s AND %s", filter, rule.ExtraFilter)
+	}
+
 	data := map[string]interface{}{
 		"TableName": model.Table,
-		"Filter":    model.DefaultFilter,
+		"Filter":    filter,
 		"Validator": rule.Validator,
 	}
 
@@ -42,25 +74,7 @@ func CompileRule(model *spec.Model, rule *spec.Rule) (string, error) {
 			return "", nil
 		}
 
-		conditions := []string{}
-		expect := rule.Expect
-		if expect.EQ != nil {
-			conditions = append(conditions, fmt.Sprintf("value = %d", *rule.Expect.EQ))
-		}
-		if expect.GT != nil {
-			conditions = append(conditions, fmt.Sprintf("value > %d", *rule.Expect.GT))
-		}
-		if expect.LT != nil {
-			conditions = append(conditions, fmt.Sprintf("value < %d", *rule.Expect.LT))
-		}
-		if expect.GTE != nil {
-			conditions = append(conditions, fmt.Sprintf("value >= %d", *rule.Expect.GTE))
-		}
-		if expect.LTE != nil {
-			conditions = append(conditions, fmt.Sprintf("value <= %d", *rule.Expect.LTE))
-		}
-
-		data["Conditions"] = strings.Join(conditions, " AND ")
+		data["Conditions"] = strings.Join(CompileExpect(&rule.Expect), " AND ")
 
 		var buf bytes.Buffer
 		if err := rowsCountTemplate.Execute(&buf, data); err != nil {

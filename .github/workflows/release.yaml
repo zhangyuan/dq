@@ -22,6 +22,10 @@ jobs:
         uses: golangci/golangci-lint-action@v4
         with:
           version: v1.55.2
+      - name: Install gotest
+        run: go install github.com/rakyll/gotest
+      - name: Test
+        run: gotest -v ./...
       - name: Build
         run: make build-all
       - name: Install UPX

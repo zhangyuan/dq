@@ -27,16 +27,18 @@ type Expect struct {
 }
 
 type Rule struct {
-	Name      string
-	Validator string
-	Columns   []string
-	Expect    Expect
+	Name        string
+	Validator   string
+	Columns     []string
+	Filter      string
+	ExtraFilter string
+	Expect      Expect
 }
 
 type Model struct {
-	Table         string
-	DefaultFilter string
-	Rules         []Rule
+	Table  string
+	Filter string
+	Rules  []Rule
 }
 
 type Spec struct {

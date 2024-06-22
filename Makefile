@@ -1,9 +1,18 @@
+.PHONY: build
 build:
-	go build
+	go build -v ./...
 
+.PHONY: test
+test:
+	gotest -v ./...
+
+.PHONY: clean
 clean:
 	rm -rf dq/
 	rm -rf bin/dq*
+
+install:
+	go install github.com/rakyll/gotest
 
 build-macos:
 	GOOS=darwin GOARCH=amd64 go build -o bin/dq_darwin-amd64
