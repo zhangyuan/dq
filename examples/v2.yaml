@@ -8,6 +8,8 @@ models:
         expect:
           gt: 0
       - name: order_no must be unique
-        validator: uniqueness
+        validator: duplicates
         columns:
           - order_no
+        expect:
+          eq: 0
