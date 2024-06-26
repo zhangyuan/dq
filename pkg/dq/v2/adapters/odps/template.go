@@ -34,3 +34,10 @@ func (t OdpsTemplates) CustomSql() string {
 func (t OdpsTemplates) Union() string {
 	return strings.TrimSpace(unionSQL)
 }
+
+func (t OdpsTemplates) EsacpeStringValue(str string) string {
+	str = strings.ReplaceAll(str, `\`, `\\`)
+	str = strings.ReplaceAll(str, `'`, `\'`)
+	str = strings.ReplaceAll(str, `;`, `\;`)
+	return str
+}

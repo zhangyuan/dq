@@ -5,6 +5,7 @@ import (
 	"dq/pkg/dq/v2/adapters"
 	"dq/pkg/dq/v2/spec"
 	"dq/pkg/dq/v2/templates/simple"
+	"encoding/json"
 	"fmt"
 	"strings"
 	"text/template"
@@ -64,7 +65,14 @@ func (c *Compiler) CompileRule(model *spec.Model, rule *spec.Rule) (string, erro
 		"Filter":     filter,
 		"Validator":  rule.Validator,
 		"Rule":       rule,
+		"Expect":     rule.Expect,
 		"Conditions": strings.Join(CompileExpect(&rule.Expect), " AND "),
+	}
+
+	context := map[string]interface{}{
+		"Validator": rule.Validator,
+		"Expect":    rule.Expect,
+		"Filter":    filter,
 	}
 
 	if rule.Validator == RowsCountValidator {
@@ -72,13 +80,29 @@ func (c *Compiler) CompileRule(model *spec.Model, rule *spec.Rule) (string, erro
 		if err != nil {
 			return "", nil
 		}
+		jsonBytes, err := json.Marshal(context)
+		if err != nil {
+			return "", err
+		}
+		data["Context"] = c.Adatper.Templates.EsacpeStringValue(string(jsonBytes))
+
 		return executeTemplate(sqlTemplate, data)
 	} else if rule.Validator == DuplicatesValidator {
-		data["Columns"] = rule.Columns
+
 		sqlTemplate, err := NewTexTemplate("sql").Funcs(sprig.FuncMap()).Parse(c.Adatper.Templates.Duplicates())
 		if err != nil {
 			return "", err
 		}
+
+		data["Columns"] = rule.Columns
+		context["Columns"] = rule.Columns
+
+		jsonBytes, err := json.Marshal(context)
+		if err != nil {
+			return "", err
+		}
+		data["Context"] = c.Adatper.Templates.EsacpeStringValue(string(jsonBytes))
+
 		return executeTemplate(sqlTemplate, data)
 	} else if rule.Validator == SqlValidator {
 		sqlTemplate, err := NewTexTemplate("sql").Funcs(sprig.FuncMap()).Parse(c.Adatper.Templates.CustomSql())
@@ -86,6 +110,14 @@ func (c *Compiler) CompileRule(model *spec.Model, rule *spec.Rule) (string, erro
 			return "", err
 		}
 		data["Query"] = rule.Query
+		context["Query"] = rule.Query
+
+		jsonBytes, err := json.Marshal(context)
+		if err != nil {
+			return "", err
+		}
+		data["Context"] = c.Adatper.Templates.EsacpeStringValue(string(jsonBytes))
+
 		return executeTemplate(sqlTemplate, data)
 	} else {
 		return "", fmt.Errorf("invalid validator %s", rule.Validator)

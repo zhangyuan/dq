@@ -19,11 +19,11 @@ type ResultTable struct {
 }
 
 type Expect struct {
-	GT  *int
-	GTE *int
-	LT  *int
-	LTE *int
-	EQ  *int
+	GT  *int `json:"GT,omitempty"`
+	GTE *int `json:"GTE,omitempty"`
+	LT  *int `json:"LT,omitempty"`
+	LTE *int `json:"LTE,omitempty"`
+	EQ  *int `json:"EQ,omitempty"`
 }
 
 type Rule struct {

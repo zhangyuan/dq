@@ -5,4 +5,5 @@ type SqlTemplates interface {
 	Duplicates() string
 	CustomSql() string
 	Union() string
+	EsacpeStringValue(str string) string
 }

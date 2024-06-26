@@ -32,6 +32,7 @@ type ResultRecord struct {
 	IsFailed  int       `db:"is_failed"`
 	IsOk      int       `db:"is_ok"`
 	Value     int       `db:"value"`
+	Context   string    `db:"context"`
 }
 
 type Result struct {

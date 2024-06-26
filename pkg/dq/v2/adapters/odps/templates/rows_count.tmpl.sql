@@ -8,5 +8,6 @@ SELECT
   "{{ .TableName }}" AS table_name,
   "{{ .Rule.Name }}" AS rule_name,
   "{{ .Rule.Validator }}" AS validator,
+  '{{ .Context }}' AS context,
   value AS value
 FROM result

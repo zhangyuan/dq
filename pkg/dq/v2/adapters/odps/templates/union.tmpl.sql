@@ -18,5 +18,5 @@ WITH final AS (
 
 {{- end }}
 )
-SELECT GETDATE() AS proc_time, table_name, rule_name, validator, is_failed, is_ok, value
+SELECT GETDATE() AS proc_time, table_name, rule_name, validator, is_failed, is_ok, value, context
 FROM final

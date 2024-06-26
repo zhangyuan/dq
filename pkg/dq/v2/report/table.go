@@ -16,6 +16,7 @@ func NewTable(result *v2.Result) table.Writer {
 		"is_ok",
 		"is_failed",
 		"value",
+		"context",
 	})
 
 	for idx := range result.Records {
@@ -27,6 +28,7 @@ func NewTable(result *v2.Result) table.Writer {
 			record.IsOk,
 			record.IsFailed,
 			record.Value,
+			record.Context,
 		})
 	}
 	return writer

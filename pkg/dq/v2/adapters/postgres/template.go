@@ -34,3 +34,7 @@ func (t PostgresTemplates) CustomSql() string {
 func (t PostgresTemplates) Union() string {
 	return strings.TrimSpace(unionSQL)
 }
+
+func (t PostgresTemplates) EsacpeStringValue(str string) string {
+	return str
+}
