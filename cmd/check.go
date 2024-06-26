@@ -29,7 +29,7 @@ var queryCmd = &cobra.Command{
 			log.Fatalln(err)
 		}
 
-		adapter, err := adapters.NewAdapterFromDSN(dsn)
+		adapter, err := adapters.NewAdapterFromDSN(driver, dsn)
 		if err != nil {
 			log.Fatalln(err)
 		}
@@ -88,7 +88,7 @@ var generateQueryCmd = &cobra.Command{
 			log.Fatalln(err)
 		}
 
-		adapter, err := adapters.NewAdapterFromDSN(dsn)
+		adapter, err := adapters.NewAdapterFromDSN(driver, dsn)
 		if err != nil {
 			log.Fatalln(err)
 		}
@@ -134,7 +134,7 @@ var generateQueriesCmd = &cobra.Command{
 			log.Fatalln(err)
 		}
 
-		adapter, err := adapters.NewAdapterFromDSN(dsn)
+		adapter, err := adapters.NewAdapterFromDSN(driver, dsn)
 		if err != nil {
 			log.Fatalln(err)
 		}
@@ -166,21 +166,28 @@ var generateQueriesCmd = &cobra.Command{
 var specPath string
 var format string
 var paramsPath string
+var driver string
 
 func init() {
 	rootCmd.AddCommand(queryCmd)
 	queryCmd.Flags().StringVarP(&specPath, "spec", "s", "dq.yaml", "Path to the rules file")
 	queryCmd.Flags().StringVarP(&format, "format", "f", "table", "Output format: table, json")
 	queryCmd.Flags().StringVar(&paramsPath, "params-path", "", "Path to params file")
+	queryCmd.Flags().StringVar(&driver, "driver", "", "Database driver. e.g. odps, postgres")
 	_ = queryCmd.MarkFlagRequired("spec")
+	_ = queryCmd.MarkFlagRequired("driver")
 
 	rootCmd.AddCommand(generateQueryCmd)
 	generateQueryCmd.Flags().StringVarP(&specPath, "spec", "s", "dq.yaml", "Path to the rules file")
 	generateQueryCmd.Flags().StringVar(&paramsPath, "params-path", "", "Path to params file")
+	generateQueryCmd.Flags().StringVar(&driver, "driver", "", "Database driver. e.g. odps, postgres")
 	_ = generateQueryCmd.MarkFlagRequired("spec")
+	_ = generateQueryCmd.MarkFlagRequired("driver")
 
 	rootCmd.AddCommand(generateQueriesCmd)
 	generateQueriesCmd.Flags().StringVarP(&specPath, "spec", "s", "dq.yaml", "Path to the rules file")
 	generateQueriesCmd.Flags().StringVar(&paramsPath, "params-path", "", "Path to params file")
+	generateQueriesCmd.Flags().StringVar(&driver, "driver", "", "Database driver. e.g. odps, postgres")
 	_ = generateQueriesCmd.MarkFlagRequired("spec")
+	_ = generateQueriesCmd.MarkFlagRequired("driver")
 }
