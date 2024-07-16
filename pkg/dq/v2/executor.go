@@ -3,6 +3,7 @@ package v2
 import (
 	"dq/pkg/dq/v2/adapters"
 	"dq/pkg/dq/v2/adapters/odps"
+	"dq/pkg/dq/v2/adapters/postgres"
 	"dq/pkg/dq/v2/spec"
 	"dq/pkg/dq/v2/templates/simple"
 	"time"
@@ -46,6 +47,11 @@ func (executor *Executor) ConnectDB() error {
 
 	if executor.adapter.Name == odps.Name {
 		db, err = odps.NewDB(executor.adapter.DSN)
+		if err != nil {
+			return err
+		}
+	} else if executor.adapter.Name == postgres.Name {
+		db, err = postgres.NewDB(executor.adapter.DSN)
 		if err != nil {
 			return err
 		}
