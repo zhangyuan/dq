@@ -14,7 +14,6 @@ type Executor struct {
 	adapter  *adapters.Adapter
 	db       *sqlx.DB
 	compiler *Compiler
-	params   map[string]string
 }
 
 func NewExecutor(adapter *adapters.Adapter, compiler *Compiler) *Executor {
