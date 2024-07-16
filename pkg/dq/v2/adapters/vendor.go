@@ -8,9 +8,9 @@ import (
 )
 
 type Adapter struct {
+	Templates templates.SqlTemplates
 	Name      string
 	DSN       string
-	Templates templates.SqlTemplates
 }
 
 func NewAdapterFromDSN(driver string, dsn string) (*Adapter, error) {

@@ -7,8 +7,8 @@ import (
 )
 
 type InsertMode struct {
-	Overwrite bool
 	Partition string
+	Overwrite bool
 }
 
 type ResultTable struct {
@@ -27,13 +27,13 @@ type Expect struct {
 }
 
 type Rule struct {
+	Expect      Expect
 	Name        string
 	Validator   string
-	Columns     []string
 	Filter      string
 	ExtraFilter string
 	Query       string
-	Expect      Expect
+	Columns     []string
 }
 
 type Model struct {

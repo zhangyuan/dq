@@ -28,10 +28,10 @@ type ResultRecord struct {
 	TableName string    `db:"table_name"`
 	RuleName  string    `db:"rule_name"`
 	Validator string    `db:"validator"`
+	Context   string    `db:"context"`
 	IsFailed  int       `db:"is_failed"`
 	IsOk      int       `db:"is_ok"`
 	Value     int       `db:"value"`
-	Context   string    `db:"context"`
 }
 
 type Result struct {
