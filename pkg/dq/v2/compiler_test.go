@@ -41,6 +41,7 @@ SELECT
   "orders" AS table_name,
   "table should not be empty" AS rule_name,
   "rows_count" AS validator,
+  '{"Expect":{"GT":0},"Filter":"deleted = false","Validator":"rows_count"}' AS context,
   value AS value
 FROM result`)
 
@@ -73,6 +74,7 @@ SELECT
   "orders" AS table_name,
   "table should not be empty" AS rule_name,
   "rows_count" AS validator,
+  '{"Expect":{"GT":0},"Filter":"deleted = false AND type IS NOT NULL","Validator":"rows_count"}' AS context,
   value AS value
 FROM result`)
 
@@ -105,6 +107,7 @@ SELECT
   "orders" AS table_name,
   "table should not be empty" AS rule_name,
   "rows_count" AS validator,
+  '{"Expect":{"GT":0},"Filter":"1=1","Validator":"rows_count"}' AS context,
   value AS value
 FROM result`)
 
@@ -142,6 +145,7 @@ SELECT
   "orders" AS table_name,
   "order_no should be unique" AS rule_name,
   "duplicates" AS validator,
+  '{"Columns":["order_no"],"Expect":{"EQ":0},"Filter":"deleted = false","Validator":"duplicates"}' AS context,
   value AS value
 FROM result`)
 
@@ -179,6 +183,7 @@ SELECT
   "work_orders" AS table_name,
   "order_no, production_date should be unique" AS rule_name,
   "duplicates" AS validator,
+  '{"Columns":["order_no","production_date"],"Expect":{"EQ":0},"Filter":"deleted = false","Validator":"duplicates"}' AS context,
   value AS value
 FROM result`)
 
