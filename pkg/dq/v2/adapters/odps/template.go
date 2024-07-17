@@ -27,6 +27,18 @@ func (t OdpsTemplates) Duplicates() string {
 	return strings.TrimSpace(duplicates)
 }
 
+func (t OdpsTemplates) NullValue() string {
+	return ""
+}
+
+func (t OdpsTemplates) NotNullValue() string {
+	return ""
+}
+
+func (t OdpsTemplates) EmptyTextValue() string {
+	return ""
+}
+
 func (t OdpsTemplates) CustomSql() string {
 	return strings.TrimSpace(customSQL)
 }

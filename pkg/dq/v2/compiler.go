@@ -6,16 +6,23 @@ import (
 	"dq/pkg/dq/v2/spec"
 	"dq/pkg/dq/v2/templates/simple"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"strings"
 	"text/template"
 
 	"github.com/Masterminds/sprig/v3"
+	"github.com/rs/zerolog/log"
 )
 
-const RowsCountValidator = "count"
+const CountValidator = "count"
 const DuplicateValueValidator = "duplicate_value"
 const NotNullValueValidator = "not_null_value"
+const NullValueValidator = "null_value"
+const Allowlist = "allowlist"
+const MinValue = "min_value"
+const MaxValue = "max_value"
+const EmptyTextValue = "empty_text_value"
 const SqlValidator = "sql"
 
 type Compiler struct {
@@ -75,7 +82,8 @@ func (c *Compiler) CompileRule(model *spec.Model, rule *spec.Rule) (string, erro
 		"Filter":    filter,
 	}
 
-	if rule.Validator == RowsCountValidator {
+	log.Debug().Msg(fmt.Sprintf("rule.Validator:%s", rule.Validator))
+	if rule.Validator == CountValidator {
 		sqlTemplate, err := NewTexTemplate("sql").Parse(c.Adatper.Templates.RowsCount())
 		if err != nil {
 			return "", nil
@@ -88,7 +96,6 @@ func (c *Compiler) CompileRule(model *spec.Model, rule *spec.Rule) (string, erro
 
 		return executeTemplate(sqlTemplate, data)
 	} else if rule.Validator == DuplicateValueValidator {
-
 		sqlTemplate, err := NewTexTemplate("sql").Funcs(sprig.FuncMap()).Parse(c.Adatper.Templates.Duplicates())
 		if err != nil {
 			return "", err
@@ -96,6 +103,51 @@ func (c *Compiler) CompileRule(model *spec.Model, rule *spec.Rule) (string, erro
 
 		data["Columns"] = rule.Columns
 		context["Columns"] = rule.Columns
+
+		jsonBytes, err := json.Marshal(context)
+		if err != nil {
+			return "", err
+		}
+		data["Context"] = c.Adatper.Templates.EsacpeStringValue(string(jsonBytes))
+
+		return executeTemplate(sqlTemplate, data)
+	} else if rule.Validator == NullValueValidator {
+		sqlTemplate, err := NewTexTemplate("sql").Funcs(sprig.FuncMap()).Parse(c.Adatper.Templates.NullValue())
+		if err != nil {
+			return "", err
+		}
+		data["Column"] = rule.Column
+		context["Column"] = rule.Column
+
+		jsonBytes, err := json.Marshal(context)
+		if err != nil {
+			return "", err
+		}
+		data["Context"] = c.Adatper.Templates.EsacpeStringValue(string(jsonBytes))
+
+		return executeTemplate(sqlTemplate, data)
+	} else if rule.Validator == NotNullValueValidator {
+		sqlTemplate, err := NewTexTemplate("sql").Funcs(sprig.FuncMap()).Parse(c.Adatper.Templates.NotNullValue())
+		if err != nil {
+			return "", err
+		}
+		data["Column"] = rule.Column
+		context["Column"] = rule.Column
+
+		jsonBytes, err := json.Marshal(context)
+		if err != nil {
+			return "", err
+		}
+		data["Context"] = c.Adatper.Templates.EsacpeStringValue(string(jsonBytes))
+
+		return executeTemplate(sqlTemplate, data)
+	} else if rule.Validator == EmptyTextValue {
+		sqlTemplate, err := NewTexTemplate("sql").Funcs(sprig.FuncMap()).Parse(c.Adatper.Templates.EmptyTextValue())
+		if err != nil {
+			return "", err
+		}
+		data["Column"] = rule.Column
+		context["Column"] = rule.Column
 
 		jsonBytes, err := json.Marshal(context)
 		if err != nil {
@@ -140,7 +192,11 @@ func (c *Compiler) ToQueries(spec *spec.Spec, params *map[string]any) ([]string,
 			rule := model.Rules[ruleIdx]
 			statement, err := c.CompileRule(&model, &rule)
 			if err != nil {
-				return nil, nil
+				return nil, err
+			}
+
+			if statement == "" {
+				return nil, errors.New("sql statement is missing")
 			}
 
 			rendered, err := simple.Compile(statement, *params)
