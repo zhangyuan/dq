@@ -13,9 +13,9 @@ import (
 	"github.com/Masterminds/sprig/v3"
 )
 
-const RowsCountValidator = "rows_count"
-const DuplicatesValidator = "duplicates"
-const NotNullValidator = "not_null"
+const RowsCountValidator = "count"
+const DuplicateValueValidator = "duplicate_value"
+const NotNullValueValidator = "not_null_value"
 const SqlValidator = "sql"
 
 type Compiler struct {
@@ -87,7 +87,7 @@ func (c *Compiler) CompileRule(model *spec.Model, rule *spec.Rule) (string, erro
 		data["Context"] = c.Adatper.Templates.EsacpeStringValue(string(jsonBytes))
 
 		return executeTemplate(sqlTemplate, data)
-	} else if rule.Validator == DuplicatesValidator {
+	} else if rule.Validator == DuplicateValueValidator {
 
 		sqlTemplate, err := NewTexTemplate("sql").Funcs(sprig.FuncMap()).Parse(c.Adatper.Templates.Duplicates())
 		if err != nil {
