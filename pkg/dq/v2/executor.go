@@ -24,21 +24,20 @@ func NewExecutor(adapter *adapters.Adapter, compiler *Compiler) *Executor {
 	}
 }
 
-type ResultRecord struct {
-	ProcTime  time.Time `db:"proc_time"`
-	TableName string    `db:"table_name"`
-	RuleName  string    `db:"rule_name"`
-	Validator string    `db:"validator"`
-	Context   string    `db:"context"`
-	IsFailed  int       `db:"is_failed"`
-	IsOk      int       `db:"is_ok"`
-	Value     int       `db:"value"`
+type Run struct {
+	ProcTime  time.Time `db:"proc_time" json:"proc_time"`
+	TableName string    `db:"table_name" json:"table_name"`
+	RuleName  string    `db:"rule_name" json:"rule_name"`
+	Validator string    `db:"validator" json:"validator"`
+	Context   string    `db:"context" json:"context"`
+	IsFailed  int       `db:"is_failed" json:"is_failed"`
+	IsOk      int       `db:"is_ok" json:"is_ok"`
+	Value     int       `db:"value" json:"value"`
 }
 
 type Result struct {
-	ColumnNames []string       `json:"column_names"`
-	Records     []ResultRecord `json:"records"`
-	IsOk        bool
+	Results []Run `json:"results"`
+	IsOk    bool
 }
 
 func (executor *Executor) ConnectDB() error {
@@ -87,7 +86,7 @@ func (executor *Executor) Query(spec *spec.Spec, params *map[string]any) (*Resul
 		IsOk: true,
 	}
 
-	var resultRows []ResultRecord
+	var resultRows []Run
 
 	sql, err = simple.Compile(sql, *params)
 	if err != nil {
@@ -104,7 +103,7 @@ func (executor *Executor) Query(spec *spec.Spec, params *map[string]any) (*Resul
 			break
 		}
 	}
-	result.Records = resultRows
+	result.Results = resultRows
 	return &result, nil
 }
 

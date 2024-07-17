@@ -53,7 +53,8 @@ var queryCmd = &cobra.Command{
 
 		result, err := executor.Query(spec, params)
 		if err != nil {
-			log.Fatalln(err)
+			os.Stderr.WriteString(err.Error())
+			os.Exit(1)
 		}
 
 		if format == "table" {
@@ -62,7 +63,8 @@ var queryCmd = &cobra.Command{
 		} else if format == "json" {
 			bytes, err := json.MarshalIndent(result, "", "  ")
 			if err != nil {
-				log.Fatalln(err)
+				os.Stderr.WriteString(err.Error())
+				os.Exit(1)
 			}
 			fmt.Println(string(bytes))
 		}

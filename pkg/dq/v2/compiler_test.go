@@ -221,6 +221,7 @@ SELECT
   "work_orders" AS table_name,
   "status should be valid" AS rule_name,
   "sql" AS validator,
+  "{"Expect":{"EQ":0},"Filter":"deleted = false","Query":"SELECT count(*) AS value from work_orders WHERE status NOT IN (SELECT * FROM VALUES (\'CREATED\'), (\'COMPLELTED\') AS t(status))","Validator":"sql"}" AS context,
   value AS value
 FROM result`)
 

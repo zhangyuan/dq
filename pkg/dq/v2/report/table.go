@@ -19,8 +19,8 @@ func NewTable(result *v2.Result) table.Writer {
 		"context",
 	})
 
-	for idx := range result.Records {
-		record := result.Records[idx]
+	for idx := range result.Results {
+		record := result.Results[idx]
 		writer.AppendRow(table.Row{
 			record.ProcTime,
 			record.TableName,
