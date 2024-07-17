@@ -1,15 +1,23 @@
 version: "2"
 models:
-  - table: orders
-    default_filter: _deleted = false
+  - table: employees
     rules:
-      - name: table must not be empty
-        validator: rows_count
+      - name: 行数大于 0
+        validator: count
         expect:
           gt: 0
-      - name: order_no must be unique
-        validator: duplicates
-        columns:
-          - order_no
+      - name: null_value name
+        validator: null_value
+        column: name
+        expect:
+          eq: 0
+      - name: not_null_value name
+        validator: not_null_value
+        column: name
+        expect:
+          eq: 3
+      - name: empty_text_value name
+        validator: empty_text_value
+        column: name
         expect:
           eq: 0
