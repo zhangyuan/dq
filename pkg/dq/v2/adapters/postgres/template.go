@@ -1,4 +1,4 @@
-package odps
+package postgres
 
 import (
 	_ "embed"
@@ -17,27 +17,24 @@ var customSQL string
 //go:embed templates/union.tmpl.sql
 var unionSQL string
 
-type OdpsTemplates struct{}
+type PostgresTemplates struct{}
 
-func (t OdpsTemplates) RowsCount() string {
+func (t PostgresTemplates) RowsCount() string {
 	return strings.TrimSpace(rowsCount)
 }
 
-func (t OdpsTemplates) Duplicates() string {
+func (t PostgresTemplates) Duplicates() string {
 	return strings.TrimSpace(duplicates)
 }
 
-func (t OdpsTemplates) CustomSql() string {
+func (t PostgresTemplates) CustomSql() string {
 	return strings.TrimSpace(customSQL)
 }
 
-func (t OdpsTemplates) Union() string {
+func (t PostgresTemplates) Union() string {
 	return strings.TrimSpace(unionSQL)
 }
 
-func (t OdpsTemplates) EsacpeStringValue(str string) string {
-	str = strings.ReplaceAll(str, `\`, `\\`)
-	str = strings.ReplaceAll(str, `'`, `\'`)
-	str = strings.ReplaceAll(str, `;`, `\;`)
+func (t PostgresTemplates) EsacpeStringValue(str string) string {
 	return str
 }

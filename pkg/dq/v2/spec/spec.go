@@ -7,8 +7,8 @@ import (
 )
 
 type InsertMode struct {
-	Overwrite bool
 	Partition string
+	Overwrite bool
 }
 
 type ResultTable struct {
@@ -19,21 +19,21 @@ type ResultTable struct {
 }
 
 type Expect struct {
-	GT  *int
-	GTE *int
-	LT  *int
-	LTE *int
-	EQ  *int
+	GT  *int `json:"GT,omitempty"`
+	GTE *int `json:"GTE,omitempty"`
+	LT  *int `json:"LT,omitempty"`
+	LTE *int `json:"LTE,omitempty"`
+	EQ  *int `json:"EQ,omitempty"`
 }
 
 type Rule struct {
+	Expect      Expect
 	Name        string
 	Validator   string
-	Columns     []string
 	Filter      string
 	ExtraFilter string
 	Query       string
-	Expect      Expect
+	Columns     []string
 }
 
 type Model struct {
