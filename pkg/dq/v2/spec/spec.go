@@ -34,6 +34,7 @@ type Rule struct {
 	ExtraFilter string
 	Query       string
 	Columns     []string
+	Column      string
 }
 
 type Model struct {

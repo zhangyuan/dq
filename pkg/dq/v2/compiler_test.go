@@ -24,7 +24,7 @@ func TestCompileRowCountRule(t *testing.T) {
 	gtValue := 0
 	rule := spec.Rule{
 		Name:      "table should not be empty",
-		Validator: "rows_count",
+		Validator: "count",
 		Expect: spec.Expect{
 			GT: &gtValue,
 		},
@@ -40,8 +40,8 @@ SELECT
   IF(value > 0, 1, 0) is_ok,
   "orders" AS table_name,
   "table should not be empty" AS rule_name,
-  "rows_count" AS validator,
-  '{"Expect":{"GT":0},"Filter":"deleted = false","Validator":"rows_count"}' AS context,
+  "count" AS validator,
+  '{"Expect":{"GT":0},"Filter":"deleted = false","Validator":"count"}' AS context,
   value AS value
 FROM result`)
 
@@ -56,7 +56,7 @@ func TestCompileRowCountRuleWithExtraFilter(t *testing.T) {
 	gtValue := 0
 	rule := spec.Rule{
 		Name:        "table should not be empty",
-		Validator:   "rows_count",
+		Validator:   "count",
 		ExtraFilter: "type IS NOT NULL",
 		Expect: spec.Expect{
 			GT: &gtValue,
@@ -73,8 +73,8 @@ SELECT
   IF(value > 0, 1, 0) is_ok,
   "orders" AS table_name,
   "table should not be empty" AS rule_name,
-  "rows_count" AS validator,
-  '{"Expect":{"GT":0},"Filter":"deleted = false AND type IS NOT NULL","Validator":"rows_count"}' AS context,
+  "count" AS validator,
+  '{"Expect":{"GT":0},"Filter":"deleted = false AND type IS NOT NULL","Validator":"count"}' AS context,
   value AS value
 FROM result`)
 
@@ -89,7 +89,7 @@ func TestCompileRowCountRuleWithFilterOverwritten(t *testing.T) {
 	gtValue := 0
 	rule := spec.Rule{
 		Name:      "table should not be empty",
-		Validator: "rows_count",
+		Validator: "count",
 		Filter:    "1=1",
 		Expect: spec.Expect{
 			GT: &gtValue,
@@ -106,8 +106,8 @@ SELECT
   IF(value > 0, 1, 0) is_ok,
   "orders" AS table_name,
   "table should not be empty" AS rule_name,
-  "rows_count" AS validator,
-  '{"Expect":{"GT":0},"Filter":"1=1","Validator":"rows_count"}' AS context,
+  "count" AS validator,
+  '{"Expect":{"GT":0},"Filter":"1=1","Validator":"count"}' AS context,
   value AS value
 FROM result`)
 
@@ -123,7 +123,7 @@ func TestCompileDuplicatesRule(t *testing.T) {
 	expectValue := 0
 	rule := spec.Rule{
 		Name:      "order_no should be unique",
-		Validator: "duplicates",
+		Validator: "duplicate_value",
 		Columns:   []string{"order_no"},
 		Expect: spec.Expect{
 			EQ: &expectValue,
@@ -144,8 +144,8 @@ SELECT
   IF(value = 0, 1, 0) is_ok,
   "orders" AS table_name,
   "order_no should be unique" AS rule_name,
-  "duplicates" AS validator,
-  '{"Columns":["order_no"],"Expect":{"EQ":0},"Filter":"deleted = false","Validator":"duplicates"}' AS context,
+  "duplicate_value" AS validator,
+  '{"Columns":["order_no"],"Expect":{"EQ":0},"Filter":"deleted = false","Validator":"duplicate_value"}' AS context,
   value AS value
 FROM result`)
 
@@ -161,7 +161,7 @@ func TestCompileDuplicatesRuleGivenMultileColumns(t *testing.T) {
 	expectValue := 0
 	rule := spec.Rule{
 		Name:      "order_no, production_date should be unique",
-		Validator: "duplicates",
+		Validator: "duplicate_value",
 		Columns:   []string{"order_no", "production_date"},
 		Expect: spec.Expect{
 			EQ: &expectValue,
@@ -182,8 +182,8 @@ SELECT
   IF(value = 0, 1, 0) is_ok,
   "work_orders" AS table_name,
   "order_no, production_date should be unique" AS rule_name,
-  "duplicates" AS validator,
-  '{"Columns":["order_no","production_date"],"Expect":{"EQ":0},"Filter":"deleted = false","Validator":"duplicates"}' AS context,
+  "duplicate_value" AS validator,
+  '{"Columns":["order_no","production_date"],"Expect":{"EQ":0},"Filter":"deleted = false","Validator":"duplicate_value"}' AS context,
   value AS value
 FROM result`)
 
